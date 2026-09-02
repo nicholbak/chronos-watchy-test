@@ -44,11 +44,18 @@
 #include "MotionModule.h"
 #include "StorageModule.h"
 
+#ifdef WATCHY_V3
+#define I2C_SDA 12
+#define I2C_SCL 11
+#define MOTOR_PIN 17
+// V3 has no external RTC chip / RTC_INT_PIN - wakeup uses the ESP32-S3's
+// own timer instead, see the sleep logic in main.cpp
+#else
 #define I2C_SDA 21
 #define I2C_SCL 22
-
 #define RTC_INT_PIN 27
 #define MOTOR_PIN 13
+#endif
 
 #define uS_TO_S_FACTOR                                                         \
   1000000ULL // Conversion factor for micro seconds to seconds
