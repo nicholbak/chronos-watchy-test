@@ -10,6 +10,7 @@
 #define ENABLE_GxEPD2_GFX 0
 #include <ArduinoJson.h>
 #include <GxEPD2_BW.h>
+#include <SPI.h>
 #include <lvgl.h>
 
 #include "watchy_ui.h"
@@ -29,10 +30,22 @@
 #define CANVAS_WIDTH 48
 #define CANVAS_HEIGHT 48
 
+#ifdef WATCHY_V3
+#define EPD_CS 33
+#define EPD_DC 34
+#define EPD_RST 35
+#define EPD_BUSY 36
+// V3's SPI bus isn't on the ESP32-S3's default pins, so these must be
+// passed explicitly to SPI.begin() before the display is initialized
+#define EPD_SCK 47
+#define EPD_MISO 46
+#define EPD_MOSI 48
+#else
 #define EPD_CS 5
 #define EPD_DC 10
 #define EPD_RST 9
 #define EPD_BUSY 19
+#endif
 
 struct IconText {
   const void *icon;
