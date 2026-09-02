@@ -50,6 +50,11 @@ void DisplayModule::begin(bool full_refresh) {
   pinMode(EPD_DC, OUTPUT);
   pinMode(EPD_RST, OUTPUT);
 
+#ifdef WATCHY_V3
+  // V3's SPI pins aren't the ESP32-S3 defaults, so they must be set explicitly
+  SPI.begin(EPD_SCK, EPD_MISO, EPD_MOSI, EPD_CS);
+#endif
+
   GxEPD2_BW::init(0, full_refresh, 2, true);
 
   lv_init();
