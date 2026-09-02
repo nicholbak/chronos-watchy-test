@@ -25,7 +25,11 @@
 
 #define CHRONOS_WATCHY_BUILD "20260417"
 
+#ifdef WATCHY_V3
+#define BATT_ADC_PIN 9
+#else
 #define BATT_ADC_PIN 34
+#endif
 
 #define READ_INTERVAL_SEC 60
 #define MAX_NOTIFICATIONS 20
@@ -138,6 +142,7 @@ public:
   int getContacts(Contact *array, int *sos, size_t max);
 
   void setRTCAlarm(DateTime dt);
+  long secondsUntil(uint8_t hour, uint8_t minute);
 
   Weather getCurrent();
   int getForecast(Weather *array, size_t max);
