@@ -291,9 +291,16 @@ void loop() {
     buttons.configureWakeup();
 
     if (sleep) {
+#ifdef WATCHY_V3
+      // V3 has no external RTC alarm chip/pin - arm the ESP32-S3's own
+      // deep-sleep timer for the number of seconds until the wake time
+      long secs = device.secondsUntil(wakeup.hour, wakeup.minute);
+      esp_sleep_enable_timer_wakeup((uint64_t)secs * uS_TO_S_FACTOR);
+#else
       esp_sleep_enable_ext0_wakeup(
           (gpio_num_t)RTC_INT_PIN,
           0); // enable deep sleep wake on RTC interrupt
+#endif
     } else {
       esp_sleep_enable_timer_wakeup((60 - watch.getSecond()) * uS_TO_S_FACTOR);
     }
