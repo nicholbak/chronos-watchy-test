@@ -49,9 +49,13 @@ String DeviceModule::getVersion() {
  *
  */
 void DeviceModule::begin() {
+#ifndef WATCHY_V3
   if (!rtc.begin(Wire)) {
     Timber.e("Failed to find PCF85063 - check your wiring!");
   }
+#endif
+  // On V3 there's no external RTC chip - time comes from ChronosESP32's
+  // internal ESP32 RTC clock instead (see below).
 
   if (!mStorage.readFile(SETTINGS_FILE, settingsDoc)) {
   }
@@ -69,11 +73,15 @@ void DeviceModule::begin() {
 
   mWatch.clearNotifications();
 
+#ifndef WATCHY_V3
   RTC_DateTime dt = rtc.getDateTime();
   mWatch.setTime(dt.getSecond(), dt.getMinute(), dt.getHour(), dt.getDay(),
                  dt.getMonth(), dt.getYear());
   rtc.resetAlarm();
   rtc.disableAlarm();
+#endif
+  // On V3, mWatch's internal clock already survives deep sleep on its own;
+  // it just starts at epoch time until synced once over BLE on first boot.
   mWatch.setName(WATCH_NAME);
   // mWatch.setScreen((ChronosScreen)0x80);
   mWatch.set24Hour(get24hr());
@@ -197,9 +205,32 @@ String DeviceModule::getAddress() {
  * @param dt DateTime object
  */
 void DeviceModule::setRTCAlarm(DateTime dt) {
+#ifndef WATCHY_V3
   RTC_Alarm alarm(dt.hour, dt.minute, dt.second, 0xFF, 0xFF);
   rtc.setAlarm(alarm);
   rtc.enableAlarm();
+#endif
+  // On V3 there's no external alarm chip to arm here - main.cpp instead
+  // calls secondsUntil() below to arm the ESP32-S3's own deep-sleep timer.
+}
+
+/**
+ * Calculate the number of seconds from now until the next occurrence of
+ * hour:minute (today if it hasn't happened yet, otherwise tomorrow).
+ * Used on V3 in place of an external RTC alarm chip.
+ * @param hour target hour (0-23)
+ * @param minute target minute (0-59)
+ * @return seconds until that time
+ */
+long DeviceModule::secondsUntil(uint8_t hour, uint8_t minute) {
+  DateTime now = getDateTime();
+  long nowSecs = (long)now.hour * 3600 + (long)now.minute * 60 + now.second;
+  long targetSecs = (long)hour * 3600 + (long)minute * 60;
+  long diff = targetSecs - nowSecs;
+  if (diff <= 0) {
+    diff += 24L * 3600L; // already passed today, wrap to tomorrow
+  }
+  return diff;
 }
 
 /**
@@ -235,8 +266,12 @@ void DeviceModule::updateBattery() {
  * Typically should be called after time is set from BLE
  */
 void DeviceModule::setRTC() {
+#ifndef WATCHY_V3
   rtc.setDateTime(mWatch.getYear(), mWatch.getMonth() + 1, mWatch.getDay(),
                   mWatch.getHour(true), mWatch.getMinute(), mWatch.getSecond());
+#endif
+  // On V3, mWatch IS the time source (ESP32-S3 internal RTC) - there's
+  // nothing external left to write the time back to.
 }
 
 /**
