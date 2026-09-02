@@ -9,17 +9,31 @@
 
 #include <Button2.h>
 
+#ifdef WATCHY_V3
+#define BUTTON_BACK 6
+#define BUTTON_MENU 7
+#define BUTTON_UP 0
+#define BUTTON_DOWN 8
+#else
 #define BUTTON_BACK 25
 #define BUTTON_MENU 26
 #define BUTTON_UP 35
 #define BUTTON_DOWN 4
+#endif
 
 #define LONG_CLICK_MS 1000
 
+#ifdef WATCHY_V3
+#define MENU_BTN_MASK (BIT64(7))
+#define BACK_BTN_MASK (BIT64(6))
+#define DOWN_BTN_MASK (BIT64(8))
+#define UP_BTN_MASK (BIT64(0))
+#else
 #define MENU_BTN_MASK (BIT64(26))
 #define BACK_BTN_MASK (BIT64(25))
 #define DOWN_BTN_MASK (BIT64(4))
 #define UP_BTN_MASK (BIT64(35))
+#endif
 #define ACC_INT_MASK (BIT64(14))
 #define BTN_PIN_MASK MENU_BTN_MASK | BACK_BTN_MASK | UP_BTN_MASK | DOWN_BTN_MASK
 
