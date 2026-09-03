@@ -36,20 +36,10 @@ ButtonModule::~ButtonModule()
  */
 void ButtonModule::begin()
 {
-#ifdef WATCHY_V3
-    // V3's buttons appear to float without an internal pull enabled here,
-    // which was misreading short taps as held/long presses. Force an
-    // internal pulldown so the pin has a defined "not pressed" state.
-    up.begin(BUTTON_UP, INPUT_PULLDOWN, false);
-    down.begin(BUTTON_DOWN, INPUT_PULLDOWN, false);
-    menu.begin(BUTTON_MENU, INPUT_PULLDOWN, false);
-    back.begin(BUTTON_BACK, INPUT_PULLDOWN, false);
-#else
     up.begin(BUTTON_UP, INPUT, false);
     down.begin(BUTTON_DOWN, INPUT, false);
     menu.begin(BUTTON_MENU, INPUT, false);
     back.begin(BUTTON_BACK, INPUT, false);
-#endif
 
     up.setID(BT_UP);
     down.setID(BT_DOWN);
