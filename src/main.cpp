@@ -161,6 +161,13 @@ void motionInterruptCallback(uint16_t irq) {
 
 void logCallback(Level level, unsigned long time, String message) {
   Serial.print(message);
+  // TEMPORARY DEBUG: also persist to a file so we can read it after a crash
+  // even if the USB serial connection didn't survive to show it live
+  File f = LittleFS.open("/debug.log", FILE_APPEND);
+  if (f) {
+    f.printf("[%lu] %s", time, message.c_str());
+    f.close();
+  }
 }
 
 void setup() {
@@ -204,6 +211,7 @@ void setup() {
   device.updateBattery();
 
   int bat = device.getBattery();
+  Timber.i("DEBUG battery: %d%% (raw %.1f mV)", bat, device.getMilliVolts());
 
   if (full_refresh && bat >= 30) {
     digitalWrite(MOTOR_PIN, HIGH);
@@ -264,6 +272,14 @@ void setup() {
 }
 
 void loop() {
+  // TEMPORARY DEBUG: track free memory over time to catch a leak
+  static unsigned long lastHeapLog = 0;
+  if (millis() - lastHeapLog > 2000) {
+    lastHeapLog = millis();
+    Timber.i("DEBUG heap: %u free / %u min-ever", ESP.getFreeHeap(),
+             ESP.getMinFreeHeap());
+  }
+
   watch.loop();
   buttons.update();
   motion.update();
