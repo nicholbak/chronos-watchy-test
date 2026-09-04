@@ -37,13 +37,12 @@ ButtonModule::~ButtonModule()
 void ButtonModule::begin()
 {
 #ifdef WATCHY_V3
-    // V3's buttons appear to float without an internal pull enabled here,
-    // which was misreading short taps as held/long presses. Force an
-    // internal pulldown so the pin has a defined "not pressed" state.
-    up.begin(BUTTON_UP, INPUT_PULLDOWN, false);
-    down.begin(BUTTON_DOWN, INPUT_PULLDOWN, false);
-    menu.begin(BUTTON_MENU, INPUT_PULLDOWN, false);
-    back.begin(BUTTON_BACK, INPUT_PULLDOWN, false);
+    // V3's buttons idle HIGH and pull LOW when pressed - the opposite of
+    // V2. Confirmed against InkWatchy's verified V3 hardware config.
+    up.begin(BUTTON_UP, INPUT_PULLUP, true);
+    down.begin(BUTTON_DOWN, INPUT_PULLUP, true);
+    menu.begin(BUTTON_MENU, INPUT_PULLUP, true);
+    back.begin(BUTTON_BACK, INPUT_PULLUP, true);
 #else
     up.begin(BUTTON_UP, INPUT, false);
     down.begin(BUTTON_DOWN, INPUT, false);
@@ -267,9 +266,23 @@ void ButtonModule::configureWakeup()
         pinMode(i, INPUT);
     }
 
+#ifdef WATCHY_V3
+    // The loop above just wiped the pullups off the button pins (that
+    // "ignore" mask was tuned for V2's pin numbers, not V3's). Put them
+    // back so the pins have a clean, defined idle-HIGH state for sleep.
+    pinMode(BUTTON_MENU, INPUT_PULLUP);
+    pinMode(BUTTON_BACK, INPUT_PULLUP);
+    pinMode(BUTTON_UP, INPUT_PULLUP);
+    pinMode(BUTTON_DOWN, INPUT_PULLUP);
+
+    // V3's buttons idle HIGH and pull LOW when pressed - wake on LOW,
+    // not HIGH (which would trigger immediately since idle is already HIGH)
+    esp_sleep_enable_ext1_wakeup(BTN_PIN_MASK, ESP_EXT1_WAKEUP_ANY_LOW);
+#else
     esp_sleep_enable_ext1_wakeup(
         BTN_PIN_MASK,
         ESP_EXT1_WAKEUP_ANY_HIGH); // enable deep sleep wake on button press
+#endif
 }
 
 /**
@@ -313,5 +326,9 @@ void ButtonModule::handleWakeup()
  */
 bool ButtonModule::isPressed(int btn)
 {
+#ifdef WATCHY_V3
+    return !digitalRead(btn); // active-low on V3
+#else
     return digitalRead(btn);
+#endif
 }
