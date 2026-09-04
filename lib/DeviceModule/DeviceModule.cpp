@@ -6,6 +6,15 @@
 
 #include "DeviceModule.h"
 
+// V2's formula (raw * 2.0 - 120) was tuned for V2's own divider circuit.
+// V3 uses a different divider; this constant and formula are taken directly
+// from InkWatchy's verified V3 support (defines.h: ADC_VOLTAGE_DIVIDER 739.750f).
+#ifdef WATCHY_V3
+#define READ_BATTERY_MV() ((analogReadMilliVolts(BATT_ADC_PIN) / 739.750f) * 1000.0f)
+#else
+#define READ_BATTERY_MV() ((analogReadMilliVolts(BATT_ADC_PIN) * 2.0f) - 120.0)
+#endif
+
 RTC_DATA_ATTR uint8_t lastHour = 0xFF;
 RTC_DATA_ATTR uint8_t lastDay = 0xFF;
 
@@ -86,7 +95,7 @@ void DeviceModule::begin() {
   // mWatch.setScreen((ChronosScreen)0x80);
   mWatch.set24Hour(get24hr());
 
-  milliVolts = (analogReadMilliVolts(BATT_ADC_PIN) * 2.0f) - 120.0;
+  milliVolts = READ_BATTERY_MV();
 
   mWatch.setBattery(getBattery());
 
@@ -101,7 +110,7 @@ void DeviceModule::begin() {
  */
 void DeviceModule::update() {
   if (millis() > lastRead + (1000 * READ_INTERVAL_SEC)) {
-    milliVolts = (analogReadMilliVolts(BATT_ADC_PIN) * 2.0f) - 120.0;
+    milliVolts = READ_BATTERY_MV();
     lastRead = millis();
   }
   if (navChanged) {
@@ -258,7 +267,7 @@ int DeviceModule::getBattery() {
  * Update the battery millivolts by reading ADC
  */
 void DeviceModule::updateBattery() {
-  milliVolts = (analogReadMilliVolts(BATT_ADC_PIN) * 2.0f) - 120.0;
+  milliVolts = READ_BATTERY_MV();
 }
 
 /**
