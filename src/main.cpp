@@ -166,7 +166,12 @@ void logCallback(Level level, unsigned long time, String message) {
 void setup() {
 
   Serial.begin(115200);
-  delay(4000); // TEMPORARY: gives time to reconnect the serial terminal after each reboot - remove once done debugging
+  // TEMPORARY DEBUG: counts down out loud so it's obvious when you've
+  // reconnected the serial terminal in time - remove once done debugging
+  for (int i = 15; i > 0; i--) {
+    Serial.printf("Waiting for serial monitor... %d\n", i);
+    delay(1000);
+  }
   Timber.setLogCallback(logCallback);
 
   esp_sleep_wakeup_cause_t wakeup_reason;
