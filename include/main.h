@@ -32,6 +32,7 @@
 
 #include <Arduino.h>
 #include <ChronosESP32.h>
+#include <LittleFS.h>
 #include <Timber.h>
 #include <Wire.h>
 
