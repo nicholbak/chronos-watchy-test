@@ -284,10 +284,15 @@ void loop() {
   if (device.sleepTimerEnded()) {
     Timber.i("Going to sleep, saving data");
     device.saveSettings();
+    Timber.i("DEBUG checkpoint: settings saved");
     device.saveWeather();
+    Timber.i("DEBUG checkpoint: weather saved");
     device.saveNotifications();
+    Timber.i("DEBUG checkpoint: notifications saved");
     device.saveContacts();
+    Timber.i("DEBUG checkpoint: contacts saved");
     device.saveQR();
+    Timber.i("DEBUG checkpoint: QR saved");
 
     bool sleep = device.isSettingActive(ST_SLEEP);
     SettingTime time = device.getSettings(ST_SLEEP);
@@ -301,10 +306,13 @@ void loop() {
     } else {
       display.timeout();
     }
+    Timber.i("DEBUG checkpoint: display timeout/sleepMode done");
     delay(50);
     display.hibernate();
+    Timber.i("DEBUG checkpoint: display hibernated");
 
     buttons.configureWakeup();
+    Timber.i("DEBUG checkpoint: wakeup configured, arming final source");
 
     if (sleep) {
 #ifdef WATCHY_V3
@@ -320,6 +328,7 @@ void loop() {
     } else {
       esp_sleep_enable_timer_wakeup((60 - watch.getSecond()) * uS_TO_S_FACTOR);
     }
+    Timber.i("DEBUG checkpoint: calling esp_deep_sleep_start() NOW");
     esp_deep_sleep_start();
   }
 }
