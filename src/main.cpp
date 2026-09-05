@@ -173,12 +173,6 @@ void logCallback(Level level, unsigned long time, String message) {
 void setup() {
 
   Serial.begin(115200);
-  // TEMPORARY DEBUG: counts down out loud so it's obvious when you've
-  // reconnected the serial terminal in time - remove once done debugging
-  for (int i = 15; i > 0; i--) {
-    Serial.printf("Waiting for serial monitor... %d\n", i);
-    delay(1000);
-  }
   Timber.setLogCallback(logCallback);
 
   esp_sleep_wakeup_cause_t wakeup_reason;
@@ -344,5 +338,9 @@ void watchy_shutdown(bool low) {
   }
   display.hibernate();
   buttons.configureWakeup();
+  // A timer wakeup may still be armed from an earlier sleep cycle - without
+  // clearing it, "powered off" would also wake on that stale timer, not
+  // just on a button press as intended.
+  esp_sleep_disable_wakeup_source(ESP_SLEEP_WAKEUP_TIMER);
   esp_deep_sleep_start();
 }
