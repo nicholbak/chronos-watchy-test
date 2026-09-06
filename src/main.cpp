@@ -101,12 +101,15 @@ void healthRequestCallback(HealthRequest request, bool state) {
 void bleDataCallback(uint8_t *data, int len) {
   if (data[0] >= 0xC0 && data[0] <= 0xCF) {
     storage.handleFileCommand(data, len);
-    // Any file-transfer activity (uploading a watchface, etc.) should keep
-    // the device awake - relying solely on the explicit 0xCE keep-awake
-    // signal caused it to fall asleep mid-transfer if the connecting tool
-    // didn't happen to send that signal at the right moments.
-    if (device.sleepTimerDuration() != TIMER_INFINITE) {
-      device.sleepTimerStart(30); // 30 sec, refreshed on every transfer command
+    // Keep the device awake during file-transfer activity, but only refresh
+    // the timer once a second rather than on every single packet - calling
+    // this on every packet during a busy transfer may itself be degrading
+    // BLE reliability (untested theory, this is how we're checking it).
+    static unsigned long lastKeepAwake = 0;
+    if (device.sleepTimerDuration() != TIMER_INFINITE &&
+        millis() - lastKeepAwake > 1000) {
+      lastKeepAwake = millis();
+      device.sleepTimerStart(30);
     }
     if (data[0] == 0xCE) {
       if (data[4] == 0xFF) {
