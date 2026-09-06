@@ -258,6 +258,11 @@ String ButtonModule::getInfo(ButtonEvent buttonEvent)
  */
 void ButtonModule::configureWakeup()
 {
+#ifndef WATCHY_V3
+    // This loop's "ignore" mask was hand-tuned to protect the original
+    // ESP32's flash/PSRAM pins. The ESP32-S3 uses different GPIO numbers
+    // for that, so this same mask would be actively dangerous on V3 -
+    // skip it there entirely and only touch the specific pins we need.
     const uint64_t ignore = 0b11110001000000110000100111000010; // Ignore some GPIOs due to resets
     for (int i = 0; i < GPIO_NUM_MAX; i++)
     {
@@ -265,11 +270,10 @@ void ButtonModule::configureWakeup()
             continue;
         pinMode(i, INPUT);
     }
+#endif
 
 #ifdef WATCHY_V3
-    // The loop above just wiped the pullups off the button pins (that
-    // "ignore" mask was tuned for V2's pin numbers, not V3's). Put them
-    // back so the pins have a clean, defined idle-HIGH state for sleep.
+    // Only touch the exact pins we care about, with a clean idle-HIGH state
     pinMode(BUTTON_MENU, INPUT_PULLUP);
     pinMode(BUTTON_BACK, INPUT_PULLUP);
     pinMode(BUTTON_UP, INPUT_PULLUP);
